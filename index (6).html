@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="hi"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>स्टॉक और सेल ट्रैकर</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+:root{--bg:#f4f5f9;--sf:#fff;--tx:#14171f;--mu:#667085;--ln:#e6e8ef;--ac:#4338ca;--ac2:#eef0ff;--gn:#047857;--gb:#d1fae5;--rd:#b91c1c;--rb:#fee2e2;--am:#b45309;--ab:#fef3c7;--sh:0 1px 2px rgba(16,24,40,.06),0 1px 3px rgba(16,24,40,.08);color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px)}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0d1017;--sf:#171b24;--tx:#eef0f5;--mu:#94a0b4;--ln:#262c38;--ac:#8b93ff;--ac2:#1f2440;--gn:#34d399;--gb:#0d3326;--rd:#f87171;--rb:#3b1517;--am:#fbbf24;--ab:#3a2c0a;--sh:none;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#0d1017;--sf:#171b24;--tx:#eef0f5;--mu:#94a0b4;--ln:#262c38;--ac:#8b93ff;--ac2:#1f2440;--gn:#34d399;--gb:#0d3326;--rd:#f87171;--rb:#3b1517;--am:#fbbf24;--ab:#3a2c0a;--sh:none;color-scheme:dark}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}html,body{margin:0}
+body{background:var(--bg);color:var(--tx);font:15px/1.45 system-ui,-apple-system,"Segoe UI","Noto Sans Devanagari",sans-serif;padding-bottom:calc(84px + env(safe-area-inset-bottom,0px))}
+.w{max-width:640px;margin:auto;padding:0 14px}
+header{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);padding:14px 0 10px}
+header h1{margin:0;font-size:20px;font-weight:700;letter-spacing:-.2px}header p{margin:2px 0 0;color:var(--mu);font-size:13px}
+.card{background:var(--sf);border:1px solid var(--ln);border-radius:14px;box-shadow:var(--sh);padding:14px;margin-bottom:10px}
+.kp{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px}.kp .card{margin:0}
+.lb{font-size:12px;color:var(--mu);font-weight:500}.nm{font-size:22px;font-weight:700;letter-spacing:-.4px;margin-top:2px}
+.pos{color:var(--gn)}.neg{color:var(--rd)}
+.sr{display:flex;align-items:center;gap:8px;background:var(--sf);border:1px solid var(--ln);border-radius:12px;padding:0 12px;margin-bottom:12px}
+.sr input{border:0;background:none;outline:0;color:var(--tx);font-size:15px;padding:12px 0;flex:1;min-width:0}
+.gh{display:flex;justify-content:space-between;align-items:center;margin:14px 2px 6px;font-size:12px;font-weight:600;color:var(--mu);text-transform:uppercase;letter-spacing:.4px}
+.it{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px 0;border-bottom:1px solid var(--ln)}.it:last-child{border:0}
+.it b{font-weight:600;font-size:14px}.sub{font-size:12px;color:var(--mu);margin-top:1px;font-variant-numeric:tabular-nums}
+.bd{display:inline-block;font-size:11px;font-weight:600;padding:2px 8px;border-radius:99px;background:var(--ac2);color:var(--ac)}.bd.g{background:var(--gb);color:var(--gn)}.bd.r{background:var(--rb);color:var(--rd)}.bd.a{background:var(--ab);color:var(--am)}
+.btn{border:0;border-radius:10px;background:var(--ac);color:#fff;font-weight:600;font-size:14px;padding:10px 16px;cursor:pointer}.btn.s{padding:7px 14px;font-size:13px}.btn.o{background:none;border:1px solid var(--ln);color:var(--tx)}.btn.w2{width:100%;padding:13px}
+:root[data-theme="dark"] .btn{color:#0d1017}@media(prefers-color-scheme:dark){:root:not([data-theme="light"]) .btn{color:#0d1017}}
+.dz{border:2px dashed var(--ln);border-radius:14px;padding:28px 14px;text-align:center;color:var(--mu);display:block;cursor:pointer}.dz:active{background:var(--ac2)}.dz b{display:block;color:var(--tx);font-size:15px;margin:8px 0 2px}
+.pg{height:6px;background:var(--ln);border-radius:9px;overflow:hidden;margin-top:12px}.pg i{display:block;height:100%;background:var(--ac);width:0;transition:width .2s}
+.em{text-align:center;color:var(--mu);padding:36px 10px}.em svg{opacity:.5}
+nav{position:fixed;left:0;right:0;bottom:0;background:var(--sf);border-top:1px solid var(--ln);padding:6px 8px calc(6px + env(safe-area-inset-bottom,0px));z-index:6}
+nav div{max-width:640px;margin:auto;display:grid;grid-template-columns:repeat(4,1fr);gap:4px}
+nav button{background:none;border:0;color:var(--mu);font-size:11px;font-weight:600;display:flex;flex-direction:column;align-items:center;gap:3px;padding:6px 0;border-radius:10px}
+nav button.on{color:var(--ac);background:var(--ac2)}
+.ov{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:10;display:flex;align-items:flex-end}.sh{background:var(--sf);width:100%;max-width:640px;margin:auto;border-radius:20px 20px 0 0;padding:16px 16px calc(16px + env(safe-area-inset-bottom,0px));max-height:92vh;overflow:auto}
+.fl{display:block;font-size:12px;font-weight:600;color:var(--mu);margin:12px 0 5px}.in{width:100%;padding:12px;border:1px solid var(--ln);border-radius:10px;background:var(--bg);color:var(--tx);font-size:16px}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:10px}.seg{display:flex;gap:6px}.seg button{flex:1;padding:10px 4px;border:1px solid var(--ln);background:var(--bg);color:var(--tx);border-radius:10px;font-size:13px;font-weight:600}.seg button.on{background:var(--ac2);color:var(--ac);border-color:var(--ac)}
+.pv{display:flex;justify-content:space-between;align-items:center;background:var(--bg);border-radius:12px;padding:12px 14px;margin:14px 0}
+.tb{overflow-x:auto}table{width:100%;border-collapse:collapse;font-size:13px}th{font-size:11px;color:var(--mu);text-align:left;padding:6px 4px;font-weight:600}td{padding:9px 4px;border-top:1px solid var(--ln);white-space:nowrap}td:not(:first-child),th:not(:first-child){text-align:right}
+#t{position:fixed;left:14px;right:14px;bottom:calc(92px + env(safe-area-inset-bottom,0px));max-width:612px;margin:auto;background:var(--tx);color:var(--bg);padding:11px 14px;border-radius:12px;font-size:14px;z-index:20;display:none}
+.g3{display:grid;grid-template-columns:92px 1fr 44px;gap:8px;margin-bottom:8px}.g3 .in{margin:0}.g3b{display:grid;grid-template-columns:1fr 46px;gap:8px}
+
+:root{--k1:#eef2ff;--k2:#ecfdf5;--k3:#fff7ed}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){--k1:#1d2150;--k2:#0e3027;--k3:#3a2a12}}
+:root[data-theme="dark"]{--k1:#1d2150;--k2:#0e3027;--k3:#3a2a12}
+header{background:linear-gradient(135deg,#4338ca 0%,#7c3aed 55%,#c026d3 100%);color:#fff;margin:0 -14px 14px;padding:18px 18px 20px;border-radius:0 0 24px 24px;box-shadow:0 8px 20px rgba(79,70,229,.28)}
+header h1{color:#fff;font-size:22px}header p{color:rgba(255,255,255,.82)}
+.btn{background:linear-gradient(135deg,#4f46e5,#7c3aed);color:#fff!important;box-shadow:0 2px 8px rgba(79,70,229,.3)}
+.btn.o{background:none;color:var(--tx)!important;box-shadow:none}
+.kp .card:nth-child(1){background:var(--k1);border-color:transparent}.kp .card:nth-child(2){background:var(--k2);border-color:transparent}
+.kp .card:nth-child(1) .nm:not(.pos):not(.neg){color:var(--ac)}.kp .card:nth-child(2) .nm:not(.pos):not(.neg){color:var(--gn)}
+.nm{font-size:24px}.gh span:first-child{color:var(--ac)}
+.dz{background:var(--ac2);border-color:var(--ac);color:var(--ac)}.dz b{color:var(--tx)}
+.seg button.on{background:linear-gradient(135deg,#4f46e5,#7c3aed);color:#fff;border-color:transparent}
+.pv{background:var(--k2)}nav{box-shadow:0 -6px 18px rgba(16,24,40,.07)}
+.card{border-left:3px solid var(--ac)}.kp .card{border-left-width:1px}
+.row2{display:flex;gap:8px;margin-top:10px}
+</style></head><body>
+<div class="w"><header><h1 id="h1"></h1><p id="h2"></p></header><main id="v"></main></div>
+<nav id="navw" style="display:none"><div id="nv"></div></nav><div id="t"></div><div id="m"></div>
+<script type="module">
+import {initializeApp} from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
+import {getAuth,onAuthStateChanged,signInWithEmailAndPassword,createUserWithEmailAndPassword,signOut,sendPasswordResetEmail} from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
+import {initializeFirestore,getFirestore,persistentLocalCache,persistentMultipleTabManager,collection,doc,getDoc,getDocs,setDoc,updateDoc,deleteDoc,onSnapshot,query,where,writeBatch} from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
+const CFG={apiKey:"AIzaSyB4bkMLld1JHpz5PlKrxNZQQ2Wy_hSoK6Q",authDomain:"mobile-tracker-f05f7.firebaseapp.com",projectId:"mobile-tracker-f05f7",storageBucket:"mobile-tracker-f05f7.firebasestorage.app",messagingSenderId:"417014790316",appId:"1:417014790316:web:e35b42fd366b27a26b0709"};
+const app=initializeApp(CFG),auth=getAuth(app);let db;
+try{db=initializeFirestore(app,{localCache:persistentLocalCache({tabManager:persistentMultipleTabManager()})})}catch(e){db=getFirestore(app)}
+const CT=["Best Mobile","Mobile Zone"];
+const IC={stock:'<path d="M21 8l-9-5-9 5v8l9 5 9-5V8z"/><path d="M3 8l9 5 9-5M12 13v8"/>',sale:'<path d="M6 6h15l-1.5 9h-12z"/><path d="M6 6L5 3H2"/><circle cx="9" cy="20" r="1.4"/><circle cx="18" cy="20" r="1.4"/>',rep:'<path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/>',up:'<path d="M12 16V4M7 9l5-5 5 5"/><path d="M4 16v4h16v-4"/>',se:'<circle cx="11" cy="11" r="7"/><path d="M21 21l-5-5"/>',me:'<circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-7 8-7s8 3 8 7"/>'};
+const ic=(k,s=22)=>`<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${IC[k]}</svg>`;
+let U=null,OWN=false,OK=false,ready=false,P=[],S=[],STF=[],FC=["Bajaj Finserv","HDB Finance","Home Credit","TVS Credit","Samsung Finance+","IDFC First","Other"],tab="stock",q="",ct=CT[0],busy=false,upMsg="",pr=0,unsubs=[],authMode="in",aerr="",lastEm="";
+const M1=new Map(),M2=new Map();window.pl=[];window.fx={};
+try{const c=localStorage.getItem("trk_ct");if(CT.includes(c))ct=c}catch(e){}
+const $=s=>document.querySelector(s),inr=n=>(n<0?"-":"")+"₹"+Math.abs(Math.round(n)).toLocaleString("en-IN");
+const esc=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const short=m=>String(m||"").split(":")[0].trim(),pf=s=>(+s.rate||0)-(+s.nlc||0)-(+s.comm||0)-(+s.cfee||0)-(+s.ffee||0),today=()=>new Date().toISOString().slice(0,10);
+function toast(x,ms=3500){const e=$("#t");e.textContent=x;e.style.display="block";clearTimeout(toast.i);toast.i=setTimeout(()=>e.style.display="none",ms)}
+const AM={"auth/invalid-credential":"ईमेल या पासवर्ड ग़लत है","auth/invalid-email":"ईमेल सही नहीं है","auth/email-already-in-use":"यह ईमेल पहले से बना है, लॉगिन करें","auth/weak-password":"पासवर्ड कम से कम 6 अक्षर का रखें","auth/network-request-failed":"इंटरनेट नहीं है","auth/too-many-requests":"बहुत कोशिशें हुईं, थोड़ी देर बाद करें","auth/missing-password":"पासवर्ड भरें"};
+const um=e=>AM[e&&e.code]||"कुछ गड़बड़ हुई, दोबारा कोशिश करें";
+onAuthStateChanged(auth,async u=>{U=u;OWN=false;OK=false;P=[];S=[];M1.clear();M2.clear();
+ if(u){try{const o=await getDoc(doc(db,"meta","owner"));
+  if(!o.exists()){await setDoc(doc(db,"meta","owner"),{uid:u.uid,email:u.email});OWN=true;OK=true}
+  else if(o.data().uid==u.uid){OWN=true;OK=true}
+  else{const s=await getDoc(doc(db,"staffEmails",(u.email||"").toLowerCase()));OK=s.exists()}
+ }catch(e){toast("एक्सेस जाँचने में दिक्कत")}
+ if(OK)listen()}
+ if(tab=="rep"&&!OWN)tab="stock";ready=true;draw()});
+function listen(){unsubs.forEach(f=>f());unsubs=[];const er=()=>toast("डेटा लोड नहीं हुआ। नेटवर्क जाँचें");
+ unsubs.push(onSnapshot(query(collection(db,"purchases"),where("st","==","in")),s=>{P=s.docs.map(d=>({id:d.id,...d.data()}));refresh()},er));
+ const d60=new Date(Date.now()-62*864e5).toISOString().slice(0,10);
+ const mk=(m,qr)=>onSnapshot(qr,s=>{m.clear();s.docs.forEach(d=>m.set(d.id,{id:d.id,...d.data()}));S=[...new Map([...M1,...M2]).values()];refresh()},er);
+ unsubs.push(mk(M1,query(collection(db,"sales"),where("date",">=",d60))),mk(M2,query(collection(db,"sales"),where("open","==",true))));
+ unsubs.push(onSnapshot(doc(db,"settings","fin"),s=>{const l=s.exists()&&s.data().list;if(l&&l.length)FC=l}));
+ if(OWN)unsubs.push(onSnapshot(collection(db,"staffEmails"),s=>{STF=s.docs.map(d=>d.id).sort();if(tab=="me")draw()}))}
+function refresh(){if(tab=="stock"&&$("#ls")){$("#k1").textContent=P.length;$("#k2").textContent=moSales();lst()}else draw()}
+const moSales=()=>S.filter(s=>(s.date||"").startsWith(today().slice(0,7))).length;
+function draw(){const nv=$("#navw");
+ if(!ready){$("#h1").textContent="स्टॉक ट्रैकर";$("#h2").textContent="";nv.style.display="none";$("#v").innerHTML=`<div class="em"><p>लोड हो रहा है…</p></div>`;return}
+ if(!U){nv.style.display="none";$("#h1").textContent="लॉगिन";$("#h2").textContent="Best Mobile · Mobile Zone";$("#v").innerHTML=vLogin();return}
+ if(!OK){nv.style.display="none";$("#h1").textContent="एक्सेस बाकी";$("#h2").textContent=U.email;$("#v").innerHTML=`<div class="card"><b>आपका खाता अभी स्वीकृत नहीं है</b><p class="sub" style="margin:8px 0 12px">मालिक से कहें कि वे ऐप के खाता टैब में आपका ईमेल (${esc(U.email)}) जोड़ दें। फिर यह पेज रिफ़्रेश करें।</p><button class="btn o" onclick="logout()">लॉग आउट</button></div>`;return}
+ const T={stock:["स्टॉक","हाथ में मौजूद फ़ोन"],sale:["सेल","पिछले 60 दिन की बिक्री"],rep:["रिपोर्ट","प्रॉफ़िट और कमीशन"],up:["अपलोड","APX स्टॉक शीट जोड़ें"],me:["खाता","लॉगिन और सेटिंग"]}[tab];
+ $("#h1").textContent=T[0];$("#h2").textContent=T[1];
+ const tabs=[["stock","स्टॉक"],["sale","सेल"],...(OWN?[["rep","रिपोर्ट"]]:[]),["up","अपलोड"],["me","खाता"]];
+ nv.style.display="block";$("#nv").style.gridTemplateColumns=`repeat(${tabs.length},1fr)`;
+ $("#nv").innerHTML=tabs.map(([k,l])=>`<button class="${tab==k?"on":""}" onclick="go('${k}')">${ic(k)}${l}</button>`).join("");
+ $("#v").innerHTML=({stock:vSt,sale:vSa,rep:vRe,up:vUp,me:vMe})[tab]();if(tab=="stock")lst()}
+function vLogin(){const n=authMode=="up";return `<div class="card"><label class="fl" style="margin-top:0">ईमेल</label><input class="in" id="em" type="email" autocomplete="username" value="${esc(lastEm)}"><label class="fl">पासवर्ड</label><input class="in" id="pw" type="password" autocomplete="${n?"new-password":"current-password"}">${aerr?`<p class="neg" style="margin:10px 0 0;font-size:13px">${aerr}</p>`:""}<button class="btn w2" style="margin-top:14px" onclick="doAuth()">${n?"खाता बनाएँ":"लॉगिन"}</button>
+ <div class="row2"><button class="btn o s" onclick="setMode('${n?"in":"up"}')">${n?"लॉगिन पर जाएँ":"नया खाता बनाएँ"}</button><button class="btn o s" onclick="resetPw()">पासवर्ड भूल गए</button></div></div><p class="sub">पहली बार का लॉगिन करने वाला मालिक बनता है। स्टाफ़ पहले खाता बनाएँ, फिर मालिक उनका ईमेल जोड़ेंगे।</p>`}
+async function doAuth(){const e=$("#em").value.trim(),p=$("#pw").value;lastEm=e;aerr="";try{if(authMode=="in")await signInWithEmailAndPassword(auth,e,p);else await createUserWithEmailAndPassword(auth,e,p)}catch(x){aerr=um(x);draw()}}
+function setMode(m){authMode=m;aerr="";draw()}
+async function resetPw(){const e=$("#em").value.trim();if(!e){toast("पहले ईमेल भरें");return}try{await sendPasswordResetEmail(auth,e);toast("रीसेट लिंक ईमेल पर भेजा गया")}catch(x){toast(um(x))}}
+async function logout(){unsubs.forEach(f=>f());unsubs=[];await signOut(auth)}
+function go(t){tab=t;draw();scrollTo(0,0)}
+function vSt(){return `<div class="kp"><div class="card"><div class="lb">स्टॉक में</div><div class="nm" id="k1">${P.length}</div></div><div class="card"><div class="lb">इस महीने बिके</div><div class="nm" id="k2">${moSales()}</div></div></div>
+ <div class="sr">${ic("se",18)}<input id="sq" placeholder="IMEI या मॉडल खोजें" value="${esc(q)}" oninput="Q(this.value)"></div><div id="ls"></div>`}
+function Q(v){q=v;lst()}
+function lst(){const st=P.filter(p=>(p.id+" "+p.model).toLowerCase().includes(q.toLowerCase()));
+ if(!st.length){$("#ls").innerHTML=`<div class="em">${ic("stock",44)}<p>${P.length?"कोई फ़ोन नहीं मिला":"अभी स्टॉक खाली है। अपलोड टैब से शीट जोड़ें"}</p></div>`;return}
+ const g={};st.forEach(p=>(g[short(p.model)]=g[short(p.model)]||[]).push(p));
+ $("#ls").innerHTML=Object.entries(g).sort().map(([m,a])=>`<div class="gh"><span>${esc(m)}</span><span class="bd">${a.length}</span></div><div class="card" style="padding:0 14px">${a.map(p=>`<div class="it"><div><b>${esc(p.id)}</b><div class="sub">${esc(p.inward||"")}${p.age?` · ${p.age} दिन`:""}${+p.age>=90?` <span class="bd a">पुराना</span>`:""}</div></div><button class="btn s" onclick="sheet('${p.id}')">बेचें</button></div>`).join("")}</div>`).join("")}
+function sheet(id){const p=P.find(x=>x.id==id);if(!p)return;window.pl=[{m:"cash",a:""}];window.fx={on:false,co:"",loan:"",fee:""};
+ $("#m").innerHTML=`<div class="ov" onclick="if(event.target==this)closeS()"><div class="sh"><div style="font-weight:700;font-size:17px">${esc(short(p.model))}</div><div class="sub">IMEI ${esc(p.id)}</div>
+ <div class="g2"><div><label class="fl">NLC (लागत)</label><input class="in" id="nlc" type="number" inputmode="decimal" oninput="pv()"></div><div><label class="fl">बिक्री रेट</label><input class="in" id="rate" type="number" inputmode="decimal" oninput="pv()"></div></div>
+ <label class="fl">फ्रेंचाइजी को कमीशन</label><input class="in" id="comm" type="number" inputmode="decimal" value="0" oninput="pv()">
+ <label class="fl">कंपनी सपोर्ट (अगर है, बाद में मिलेगा)</label><input class="in" id="sup" type="number" inputmode="decimal" placeholder="0">
+ <label class="fl">स्टोर / काउंटर</label><div class="seg" id="sg">${CT.map(c=>`<button class="${c==ct?"on":""}" onclick="setCt('${c}')">${c}</button>`).join("")}</div>
+ <label class="fl">पेमेंट कैसे मिला</label><div id="pay">${payH()}</div>
+ <label class="fl">कार्ड/बैंक चार्ज (₹, अगर लगा)</label><input class="in" id="cfee" type="number" inputmode="decimal" placeholder="0" oninput="pv()">
+ <div class="g2"><div><label class="fl">तारीख</label><input class="in" id="dt" type="date" value="${today()}"></div><div><label class="fl">ग्राहक (वैकल्पिक)</label><input class="in" id="cu"></div></div>
+ <div class="pv" style="${OWN?"":"display:none"}"><span class="lb">प्रॉफ़िट</span><b id="pvv" style="font-size:20px">₹0</b></div><div class="sub" id="bal" style="margin:-6px 2px 12px"></div>
+ <div class="g2"><button class="btn o w2" onclick="closeS()">रद्द</button><button class="btn w2" onclick="sellIt('${id}')">सेल सेव करें</button></div></div></div>`}
+function closeS(){$("#m").innerHTML=""}
+function setCt(c){ct=c;try{localStorage.setItem("trk_ct",c)}catch(e){}document.querySelectorAll("#sg button").forEach(b=>b.classList.toggle("on",b.textContent==c))}
+function payH(){return pl.map((x,i)=>`<div class="g3"><select class="in" onchange="pl[${i}].m=this.value">${[["cash","कैश"],["upi","UPI"],["card","कार्ड"]].map(([k,l])=>`<option value="${k}" ${x.m==k?"selected":""}>${l}</option>`).join("")}</select><input class="in" type="number" inputmode="decimal" placeholder="रकम" value="${esc(x.a)}" oninput="pl[${i}].a=this.value;pv()"><button class="btn o" onclick="pl.splice(${i},1);pay()">✕</button></div>`).join("")+`<button class="btn o s" onclick="pl.push({m:'cash',a:''});pay()">+ पेमेंट जोड़ें</button> <button class="btn o s" onclick="fx.on=!fx.on;fx.co=fx.co||FCL()[0];pay()">${fx.on?"फाइनेंस हटाएँ":"+ फाइनेंस"}</button>`+(fx.on?`<div class="card" style="margin:10px 0 0;background:var(--bg)"><label class="fl" style="margin-top:0">फाइनेंस कंपनी</label>${fx.adding?`<div class="g3b"><input class="in" id="nfc" placeholder="कंपनी का नाम" style="margin:0"><button class="btn" onclick="saveFc()">ठीक</button></div>`:`<div class="g3b"><select class="in" style="margin:0" onchange="fx.co=this.value">${FC.map(c=>`<option ${fx.co==c?"selected":""}>${esc(c)}</option>`).join("")}</select><button class="btn" onclick="fx.adding=true;pay()">+</button></div>`}<div class="g2"><div><label class="fl">लोन रकम (डिसबर्समेंट)</label><input class="in" type="number" inputmode="decimal" value="${esc(fx.loan)}" oninput="fx.loan=this.value;pv()"></div><div><label class="fl">फाइनेंस फ़ीस (₹)</label><input class="in" type="number" inputmode="decimal" value="${esc(fx.fee)}" oninput="fx.fee=this.value;pv()"></div></div></div>`:"")}
+window.FCL=()=>FC;
+function pay(){$("#pay").innerHTML=payH();pv()}
+function saveFc(){const n=($("#nfc").value||"").trim();fx.adding=false;if(n){if(!FC.includes(n)){FC.push(n);setDoc(doc(db,"settings","fin"),{list:FC}).catch(()=>{})}fx.co=n}pay()}
+function pv(){const rate=+$("#rate").value||0,v=rate-(+$("#nlc").value||0)-(+$("#comm").value||0)-(+$("#cfee").value||0)-(fx.on?+fx.fee||0:0),e=$("#pvv");e.textContent=inr(v);e.className=v>=0?"pos":"neg";const paid=pl.reduce((a,x)=>a+(+x.a||0),0)+(fx.on?+fx.loan||0:0),d=rate-paid,b=$("#bal");if(b)b.innerHTML=paid?(Math.abs(d)<.5?'<span class="pos">भुगतान पूरा</span>':"अंतर "+inr(d)+" बाकी"):""}
+function sellIt(id){const nlc=+$("#nlc").value,rate=+$("#rate").value,comm=+$("#comm").value||0,sup=+$("#sup").value||0,cfee=+$("#cfee").value||0,ffee=fx.on?+fx.fee||0:0,loan=fx.on?+fx.loan||0:0;
+ if(!nlc||!rate){toast("NLC और बिक्री रेट भरें");return}if(!P.find(x=>x.id==id)){toast("यह IMEI स्टॉक में नहीं है");return}
+ if(fx.on&&!loan){toast("लोन रकम भरें");return}
+ let pays=pl.filter(x=>+x.a>0).map(x=>({m:x.m,a:+x.a}));if(!pays.length&&!fx.on)pays=[{m:"cash",a:rate}];
+ if(Math.abs(pays.reduce((a,x)=>a+x.a,0)+loan-rate)>.5){toast("पेमेंट का जोड़ बिक्री रेट के बराबर करें");return}
+ const p=P.find(x=>x.id==id),d={model:short(p.model),nlc,rate,comm,sup,supSt:sup?"pending":"",cfee,ffee,pays,counter:ct,date:$("#dt").value||today(),cust:$("#cu").value,open:!!sup||fx.on,by:U.email};if(fx.on)d.fin={co:fx.co||FC[0],loan,st:"pending"};
+ const b=writeBatch(db);b.set(doc(db,"sales",id),d);b.update(doc(db,"purchases",id),{st:"sold"});
+ b.commit().catch(()=>toast("सेव में दिक्कत आई, सेल जाँच लें",6000));closeS();toast("सेल सेव हुई"+(OWN?" · प्रॉफ़िट "+inr(rate-nlc-comm-cfee-ffee):""))}
+function vSa(){const l=[...S].sort((a,b)=>(b.date||"").localeCompare(a.date||""));if(!l.length)return `<div class="em">${ic("sale",44)}<p>अभी कोई सेल दर्ज नहीं है</p></div>`;
+ return `<div class="card" style="padding:0 14px">${l.map(s=>`<div class="it"><div style="min-width:0"><b>${esc(s.model)}</b><div class="sub">${esc(s.id)}</div><div class="sub">${esc(s.date)} · <span class="bd">${esc(s.counter)}</span></div>${OWN?`<div class="sub">NLC ${inr(s.nlc)} · रेट ${inr(s.rate)} · कमीशन ${inr(s.comm)}</div>`:`<div class="sub">रेट ${inr(s.rate)}</div>`}${+s.sup?`<div class="sub">कंपनी सपोर्ट ${inr(s.sup)} <span class="bd ${s.supSt=="received"?"g":"a"}">${s.supSt=="received"?"मिल गया":"बाकी"}</span></div>`:""}${s.pays?`<div class="sub">${s.pays.map(x=>({cash:"कैश",upi:"UPI",card:"कार्ड"}[x.m])+" "+inr(x.a)).join(" · ")}${s.fin?` · ${esc(s.fin.co)} ${inr(s.fin.loan)} <span class="bd ${s.fin.st=="received"?"g":"a"}">${s.fin.st=="received"?"लोन मिला":"लोन बाकी"}</span>`:""}</div>`:""}</div><div style="text-align:right">${OWN?`<b class="${pf(s)>=0?"pos":"neg"}">${inr(pf(s))}</b>`:""}<div>${s.fin&&s.fin.st!="received"?`<button class="btn s" style="margin-top:6px;margin-right:6px" onclick="finGot('${s.id}')">लोन मिला</button>`:""}${+s.sup&&s.supSt!="received"?`<button class="btn s" style="margin-top:6px;margin-right:6px" onclick="supGot('${s.id}')">सपोर्ट मिला</button>`:""}${OWN?`<button class="btn o s" style="margin-top:6px" onclick="undo('${s.id}')">रिटर्न</button>`:""}</div></div></div>`).join("")}</div>`}
+function undo(id){if(!OWN||!confirm("सेल हटाकर फ़ोन वापस स्टॉक में डालें?"))return;const b=writeBatch(db);b.delete(doc(db,"sales",id));b.update(doc(db,"purchases",id),{st:"in"});b.commit().catch(()=>toast("नहीं हो पाया"));toast("फ़ोन वापस स्टॉक में")}
+function supGot(id){const s=S.find(x=>x.id==id);if(!s)return;updateDoc(doc(db,"sales",id),{supSt:"received",supDate:today(),open:!!(s.fin&&s.fin.st!="received")}).catch(()=>toast("नहीं हो पाया"));toast("सपोर्ट मिला दर्ज हुआ")}
+function finGot(id){const s=S.find(x=>x.id==id);if(!s)return;updateDoc(doc(db,"sales",id),{"fin.st":"received","fin.date":today(),open:!!(+s.sup&&s.supSt!="received")}).catch(()=>toast("नहीं हो पाया"));toast("लोन रकम मिली दर्ज हुई")}
+function colRep(){const c={},f={};S.forEach(s=>{const o=c[s.counter]=c[s.counter]||{cash:0,upi:0,card:0,fin:0};(s.pays||[]).forEach(x=>o[x.m]+=x.a);if(s.fin){o.fin+=s.fin.loan;if(s.fin.st!="received")f[s.fin.co]=(f[s.fin.co]||0)+s.fin.loan}});
+ return `<div class="card"><b>पेमेंट कलेक्शन</b><div class="tb"><table><tr><th>स्टोर</th><th>कैश</th><th>UPI</th><th>कार्ड</th><th>फाइनेंस</th></tr>${Object.entries(c).map(([k,o])=>`<tr><td>${esc(k)}</td><td>${inr(o.cash)}</td><td>${inr(o.upi)}</td><td>${inr(o.card)}</td><td>${inr(o.fin)}</td></tr>`).join("")||'<tr><td colspan="5" style="text-align:center;color:var(--mu)">अभी डेटा नहीं</td></tr>'}</table></div></div><div class="card"><b>फाइनेंस से आना बाकी</b>${Object.entries(f).map(([k,v])=>`<div class="it"><span>${esc(k)}</span><b>${inr(v)}</b></div>`).join("")||'<div class="sub" style="margin-top:6px">कोई लोन बाकी नहीं</div>'}</div>`}
+function vRe(){const ms=today().slice(0,7),by={};S.forEach(s=>{const c=by[s.counter]=by[s.counter]||{n:0,r:0,p:0};c.n++;c.r+=+s.rate||0;c.p+=pf(s)});
+ const tot=S.reduce((a,s)=>a+pf(s),0),mo=S.filter(s=>(s.date||"").startsWith(ms)).reduce((a,s)=>a+pf(s),0),cm=S.reduce((a,s)=>a+(+s.comm||0),0),sum=(f)=>inr(S.filter(f).reduce((a,s)=>a+ +s.sup,0));
+ return `<div class="kp"><div class="card"><div class="lb">प्रॉफ़िट (60 दिन)</div><div class="nm ${tot>=0?"pos":"neg"}">${inr(tot)}</div></div><div class="card"><div class="lb">इस महीने</div><div class="nm">${inr(mo)}</div></div></div>
+ <div class="card"><div class="lb">फ्रेंचाइजी को दिया कुल कमीशन</div><div class="nm">${inr(cm)}</div></div>
+ <div class="kp"><div class="card"><div class="lb">कंपनी सपोर्ट बाकी</div><div class="nm" style="color:var(--am)">${sum(s=>+s.sup&&s.supSt!="received")}</div></div><div class="card"><div class="lb">सपोर्ट मिल चुका</div><div class="nm pos">${sum(s=>+s.sup&&s.supSt=="received")}</div></div></div>
+ <div class="card"><b>स्टोर-वाइज़</b><div class="tb"><table><tr><th>स्टोर</th><th>सेल</th><th>बिक्री</th><th>प्रॉफ़िट</th></tr>${Object.entries(by).map(([k,c])=>`<tr><td>${esc(k)}</td><td>${c.n}</td><td>${inr(c.r)}</td><td class="${c.p>=0?"pos":"neg"}">${inr(c.p)}</td></tr>`).join("")||`<tr><td colspan="4" style="text-align:center;color:var(--mu)">अभी डेटा नहीं</td></tr>`}</table></div></div>${colRep()}
+ <button class="btn w2" onclick="bkSales(false)">इस रिपोर्ट की CSV डाउनलोड करें</button>`}
+function dl(name,rows){const csv="\ufeff"+rows.map(a=>a.map(x=>'"'+String(x??"").replace(/"/g,'""')+'"').join(",")).join("\n");const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([csv],{type:"text/csv"}));a.download=name;document.body.appendChild(a);a.click();a.remove();toast("फ़ाइल तैयार")}
+const SH=["तारीख","IMEI","मॉडल","स्टोर","NLC","बिक्री रेट","कमीशन","प्रॉफ़िट","ग्राहक","कंपनी सपोर्ट","सपोर्ट स्टेटस","भुगतान","फाइनेंस कंपनी","लोन रकम","लोन स्टेटस","चार्ज","एंट्री करने वाला"];
+const SR=s=>[s.date,'="'+s.id+'"',s.model,s.counter,s.nlc,s.rate,s.comm,pf(s),s.cust||"",s.sup||0,s.sup?(s.supSt=="received"?"मिल गया":"बाकी"):"",(s.pays||[]).map(x=>x.m+":"+x.a).join(" | "),s.fin?s.fin.co:"",s.fin?s.fin.loan:"",s.fin?(s.fin.st=="received"?"मिला":"बाकी"):"",(+s.cfee||0)+(+s.ffee||0),s.by||""];
+async function bkSales(all){if(!OWN)return;try{let l=S;if(all){toast("सारा डेटा ला रहे हैं…");l=(await getDocs(collection(db,"sales"))).docs.map(d=>({id:d.id,...d.data()}))}dl(all?"sales-backup.csv":"sales-report.csv",[SH,...l.sort((a,b)=>(a.date||"").localeCompare(b.date||"")).map(SR)])}catch(e){toast("बैकअप नहीं बन पाया")}}
+function bkStock(){dl("stock-now.csv",[["IMEI","मॉडल","इनवर्ड","उम्र"],...P.map(p=>['="'+p.id+'"',p.model,p.inward,p.age])])}
+function vMe(){return `<div class="card"><div class="lb">लॉगिन खाता</div><div style="font-weight:600;margin:2px 0 6px">${esc(U.email)}</div><span class="bd ${OWN?"g":""}">${OWN?"मालिक":"स्टाफ़"}</span></div>
+ <div class="card"><b>मेरा डिफ़ॉल्ट स्टोर</b><div class="seg" id="sg" style="margin-top:8px">${CT.map(c=>`<button class="${c==ct?"on":""}" onclick="setCt('${c}')">${c}</button>`).join("")}</div></div>
+ ${OWN?`<div class="card"><b>स्टाफ़ एक्सेस</b><p class="sub" style="margin:4px 0 8px">स्टाफ़ पहले लॉगिन स्क्रीन से अपना खाता बनाए, फिर उसका ईमेल यहाँ जोड़ें।</p><div class="g3b"><input class="in" id="se" type="email" placeholder="staff@example.com" style="margin:0"><button class="btn" onclick="addStaff()">जोड़ें</button></div>${STF.map(e=>`<div class="it"><span>${esc(e)}</span><button class="btn o s" onclick="rmStaff('${esc(e)}')">हटाएँ</button></div>`).join("")}</div>
+ <div class="card"><b>बैकअप</b><p class="sub" style="margin:4px 0 10px">पूरा सेल डेटा और मौजूदा स्टॉक अपनी फ़ाइल में सेव करें।</p><div class="g2"><button class="btn" onclick="bkSales(true)">सारी सेल CSV</button><button class="btn o" onclick="bkStock()">स्टॉक CSV</button></div></div>`:""}
+ <button class="btn o w2" onclick="logout()">लॉग आउट</button>`}
+function addStaff(){const e=($("#se").value||"").trim().toLowerCase();if(!/^\S+@\S+\.\S+$/.test(e)){toast("सही ईमेल भरें");return}setDoc(doc(db,"staffEmails",e),{at:today()}).then(()=>toast("स्टाफ़ जुड़ गया")).catch(()=>toast("नहीं हो पाया"))}
+function rmStaff(e){if(confirm(e+" का एक्सेस हटाएँ?"))deleteDoc(doc(db,"staffEmails",e)).catch(()=>toast("नहीं हो पाया"))}
+function vUp(){return `<label class="dz" for="f">${ic("up",34)}<b>शीट चुनें</b>Excel (.xlsx, .xlsm, .xls) या CSV</label><input type="file" id="f" hidden onchange="doUp(this.files[0])">
+ <div class="pg" style="display:${busy?"block":"none"}"><i id="pb" style="width:${pr}%"></i></div><div id="ur" style="margin-top:12px">${upMsg}</div><p class="sub" style="margin-top:14px">सिर्फ़ नए IMEI जुड़ते हैं। पुराने और बिक चुके IMEI अपने आप छूट जाते हैं।</p>`}
+function res(h){upMsg=h;const e=$("#ur");if(e)e.innerHTML=h}
+async function doUp(file){if(!file)return;busy=true;pr=0;res("");$(".pg").style.display="block";
+ try{const wb=XLSX.read(await file.arrayBuffer(),{type:"array"}),rows=XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]],{header:1,raw:false,defval:""});
+  const hi=rows.findIndex(r=>r.some(c=>/imei|serial/i.test(c)));if(hi<0)throw new Error("IMEI कॉलम नहीं मिला");
+  const H=rows[hi].map(c=>String(c).toLowerCase()),ix=k=>H.findIndex(c=>c.includes(k)),cI=ix("imei")>=0?ix("imei"):ix("serial"),mI=ix("model"),dI=ix("inward"),aI=H.findIndex(c=>c=="age");
+  const seen=new Set,items=[];
+  for(const r of rows.slice(hi+1)){let v=String(r[cI]||"").trim();if(/e\+/i.test(v))v=Number(v).toFixed(0);v=v.replace(/\D/g,"");
+   if(v.length<14||v.length>16||seen.has(v))continue;seen.add(v);items.push({id:v,model:r[mI]||"",inward:r[dI]||"",age:+r[aI]||0})}
+  if(!items.length)throw new Error("शीट में कोई IMEI नहीं मिला");
+  const have=new Set(P.map(p=>p.id)),cand=items.filter(i=>!have.has(i.id)),nw=[];
+  for(let i=0;i<cand.length;i+=20){const ch=cand.slice(i,i+20),ex=await Promise.all(ch.map(c=>getDoc(doc(db,"purchases",c.id))));ch.forEach((c,k)=>{if(!ex[k].exists())nw.push(c)})}
+  for(let i=0;i<nw.length;i+=400){const b=writeBatch(db);nw.slice(i,i+400).forEach(n=>b.set(doc(db,"purchases",n.id),{model:n.model,inward:n.inward,age:n.age,added:today(),st:"in"}));await b.commit();pr=Math.round(Math.min(nw.length,i+400)/nw.length*100);const pb=$("#pb");if(pb)pb.style.width=pr+"%"}
+  const ms=P.filter(p=>!seen.has(p.id));
+  res(`<div class="card"><div class="lb">अपलोड पूरा</div><div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap"><span class="bd g">नए जुड़े: ${nw.length}</span><span class="bd">पहले से थे: ${items.length-nw.length}</span>${ms.length?`<span class="bd r">मिलान करें: ${ms.length}</span>`:""}</div>${ms.length?`<p class="sub" style="margin-top:10px">ये IMEI शीट में नहीं हैं, पर आपके यहाँ बिके दर्ज नहीं:</p>`+ms.slice(0,25).map(p=>`<div class="sub">${esc(short(p.model))} · ${esc(p.id)}</div>`).join(""):""}</div>`)
+ }catch(e){res(`<div class="card"><span class="bd r">फ़ाइल नहीं पढ़ी जा सकी</span><p class="sub">${esc(e.message||e)}</p></div>`)}
+ busy=false;const g=$(".pg");if(g)g.style.display="none";const f=$("#f");if(f)f.value=""}
+Object.assign(window,{go,Q,sheet,closeS,setCt,pay,saveFc,pv,sellIt,undo,supGot,finGot,bkSales,bkStock,addStaff,rmStaff,doUp,doAuth,setMode,resetPw,logout});
+draw();
+</script></body></html>
